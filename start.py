@@ -50,20 +50,32 @@ def get_credentials():
     return credentials
 
 def main():
+    # Change this variable to id of imported calendar
+    inputId = "foo"
+    # Change this variable to string being parsed for
+    searchString = "bar"
+    # Change this variable to id of calander events will be added to
+    exportId = "foobar"
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
+    print('Parsing for events containing "' + searchString + '"')
     eventsResult = service.events().list(
-        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+        calendarId=id, timeMin=now, maxResults=100, singleEvents=True,
         orderBy='startTime').execute()
     events = eventsResult.get('items', [])
 
-    if not events:
-        print('No upcoming events found.')
+    exported = []
+
     for event in events:
+        if searchString in event['summary']:
+            exported.append(event)
+
+    if not exported:
+        print('No upcoming events found.')
+    for event in exported:
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event['summary'])
 
